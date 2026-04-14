@@ -1,26 +1,182 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy: #1a1a2e;
+  --color-navy-light: #16213e;
+  --color-midnight: #0f3460;
+  --color-gold: #e6b422;
+  --color-gold-light: #f0d060;
+  --color-emerald: #2ecc71;
+  --color-parchment: #f0e6d3;
+  --color-parchment-dark: #d4c4a8;
+  --color-ruby: #e74c3c;
+  --color-conama-azul: #0055BF;
+  --color-conama-vermelho: #ED1C24;
+  --color-conama-verde: #009639;
+  --color-conama-amarelo: #FFD700;
+  --color-conama-marrom: #8B4513;
+  --color-conama-cinza: #808080;
+  --font-heading: var(--font-cinzel);
+  --font-body: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0f3460 #1a1a2e;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #1a1a2e;
+  color: #f0e6d3;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
+
+.font-heading {
+  font-family: var(--font-heading), serif;
+}
+
+/* RPG Card Style */
+.rpg-card {
+  background: linear-gradient(145deg, #16213e 0%, #0f3460 100%);
+  border: 2px solid #e6b42240;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(230, 180, 34, 0.1);
+}
+
+.rpg-card-gold {
+  background: linear-gradient(145deg, #16213e 0%, #0f3460 100%);
+  border: 2px solid #e6b422;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(230, 180, 34, 0.2), 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* RPG Button Styles */
+.rpg-btn {
+  background: linear-gradient(180deg, #2a4a7f 0%, #0f3460 100%);
+  border: 2px solid #e6b42260;
+  border-radius: 8px;
+  padding: 10px 24px;
+  color: #f0e6d3;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.rpg-btn:hover {
+  border-color: #e6b422;
+  box-shadow: 0 0 12px rgba(230, 180, 34, 0.3);
+  transform: translateY(-1px);
+}
+
+.rpg-btn:active {
+  transform: translateY(0);
+}
+
+.rpg-btn-gold {
+  background: linear-gradient(180deg, #e6b422 0%, #c99a15 100%);
+  border: 2px solid #f0d060;
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+.rpg-btn-gold:hover {
+  background: linear-gradient(180deg, #f0d060 0%, #e6b422 100%);
+  box-shadow: 0 0 20px rgba(230, 180, 34, 0.5);
+}
+
+.rpg-btn-emerald {
+  background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+  border: 2px solid #2ecc71;
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+/* Glowing effects */
+.glow-gold {
+  box-shadow: 0 0 15px rgba(230, 180, 34, 0.4);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+
+.glow-text-gold {
+  text-shadow: 0 0 10px rgba(230, 180, 34, 0.5);
+}
+
+/* XP Bar */
+.xp-bar-bg {
+  background: #1a1a2e;
+  border: 2px solid #e6b42240;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  background: linear-gradient(90deg, #e6b422 0%, #f0d060 50%, #e6b422 100%);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes float-up {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(230, 180, 34, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(230, 180, 34, 0.6); }
+}
+
+@keyframes scan-line {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-float-up {
+  animation: float-up 1.5s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 1.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Rarity colors */
+.rarity-comum { color: #a0a0a0; border-color: #a0a0a0; }
+.rarity-raro { color: #4a9eff; border-color: #4a9eff; }
+.rarity-epico { color: #b44aff; border-color: #b44aff; }
+.rarity-lendario { color: #ff8c00; border-color: #ff8c00; }
+
+.rarity-bg-comum { background: #a0a0a020; }
+.rarity-bg-raro { background: #4a9eff20; }
+.rarity-bg-epico { background: #b44aff20; }
+.rarity-bg-lendario { background: #ff8c0020; }
+
+/* CONAMA category backgrounds */
+.conama-papel { background-color: #0055BF20; border-color: #0055BF; }
+.conama-plastico { background-color: #ED1C2420; border-color: #ED1C24; }
+.conama-vidro { background-color: #00963920; border-color: #009639; }
+.conama-metal { background-color: #FFD70020; border-color: #FFD700; }
+.conama-organico { background-color: #8B451320; border-color: #8B4513; }
+.conama-rejeito { background-color: #80808020; border-color: #808080; }
