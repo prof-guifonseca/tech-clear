@@ -1,148 +1,206 @@
 'use client';
 
-import { useGame } from '@/store/GameContext';
-import { getXpForNextLevel } from '@/data/levels';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+
+import {
+  ListRow,
+  MetricPill,
+  ProgressBar,
+  SectionKicker,
+  SectionSheet,
+} from '@/components/tech-clear/ui';
+import { getXpForNextLevel } from '@/data/levels';
+import { cn } from '@/lib/cn';
+import { useGame } from '@/store/GameContext';
+
+const SECTION_TRANSITION = {
+  duration: 0.45,
+  ease: 'easeOut' as const,
+};
 
 export default function InicioPage() {
   const { state } = useGame();
   const { student, dailyQuests, disposals } = state;
   const xpInfo = getXpForNextLevel(student.totalXp);
 
-  const todayDisposals = disposals.filter(d => {
-    const dDate = new Date(d.timestamp).toDateString();
-    return dDate === new Date().toDateString();
+  const todayDisposals = disposals.filter((disposal) => {
+    const disposalDate = new Date(disposal.timestamp).toDateString();
+    return disposalDate === new Date().toDateString();
   });
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Character Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+    <div className="space-y-4 pb-4">
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rpg-card-gold p-5"
+        transition={SECTION_TRANSITION}
       >
-        <div className="flex items-center gap-4">
-          <div className="text-6xl">{student.avatar}</div>
-          <div className="flex-1">
-            <h2 className="font-heading text-xl font-bold text-gold">{student.name}</h2>
-            <p className="text-sm text-parchment-dark">{student.title}</p>
-            <div className="flex items-center gap-4 mt-2 text-sm">
-              <span className="flex items-center gap-1">
-                <span className="text-gold">⭐</span> Nivel {student.level}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="text-orange-400">🔥</span> {student.streak} dias
-              </span>
-            </div>
-            <div className="mt-2">
-              <div className="xp-bar-bg h-3">
-                <div className="xp-bar-fill h-full" style={{ width: `${xpInfo.progress}%` }} />
+        <SectionSheet tone="hero" className="overflow-hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex size-[4.5rem] shrink-0 items-center justify-center rounded-[26px] border border-brass/25 bg-white/[0.04] text-5xl shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                {student.avatar}
               </div>
-              <div className="text-xs text-parchment-dark mt-1">
-                {xpInfo.current} / {xpInfo.needed} XP para o proximo nivel
+              <div className="min-w-0">
+                <SectionKicker>Campanha ativa</SectionKicker>
+                <h1 className="mt-2 font-heading text-[2.4rem] leading-none text-parchment">
+                  {student.name}
+                </h1>
+                <p className="mt-2 text-base text-parchment/68">{student.title}</p>
               </div>
             </div>
+
+            <div className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-right">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-parchment/38">Turma</p>
+              <p className="text-sm font-semibold text-brass">{student.className}</p>
+            </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Quick Action */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Link href="/descarte" className="block">
-          <div className="rpg-btn-emerald rpg-btn w-full text-center py-4 text-lg flex items-center justify-center gap-3">
-            <span className="text-2xl">♻️</span>
-            Iniciar Descarte
-            <span className="text-2xl">→</span>
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-parchment/52">
+              <span>Progresso para o proximo nivel</span>
+              <span>{xpInfo.progress}%</span>
+            </div>
+            <ProgressBar value={xpInfo.progress} className="h-3" />
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-parchment/44">
+              <span>{xpInfo.current} de {xpInfo.needed} XP</span>
+              <span>Sequencia {student.streak} dias</span>
+              <span>Nivel {student.level}</span>
+            </div>
           </div>
-        </Link>
-      </motion.div>
 
-      {/* Today's Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+          <Link
+            href="/descarte"
+            className="mt-6 flex min-h-14 items-center justify-between rounded-full bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] px-5 text-ink shadow-[0_18px_42px_rgba(72,213,151,0.2)] transition-transform active:scale-[0.99]"
+          >
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-ink/60">Ritual do dia</p>
+              <p className="text-base font-semibold">Abrir novo descarte</p>
+            </div>
+            <span className="text-sm font-semibold uppercase tracking-[0.22em]">Ir agora</span>
+          </Link>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-3 gap-3"
+        transition={{ ...SECTION_TRANSITION, delay: 0.08 }}
+        className="flex gap-3 overflow-x-auto pb-1"
       >
-        <div className="rpg-card p-3 text-center">
-          <div className="text-2xl font-bold text-gold">{todayDisposals.length}</div>
-          <div className="text-[10px] text-parchment-dark">Descartes Hoje</div>
-        </div>
-        <div className="rpg-card p-3 text-center">
-          <div className="text-2xl font-bold text-emerald">{disposals.length}</div>
-          <div className="text-[10px] text-parchment-dark">Total</div>
-        </div>
-        <div className="rpg-card p-3 text-center">
-          <div className="text-2xl font-bold text-orange-400">{student.streak}</div>
-          <div className="text-[10px] text-parchment-dark">Streak</div>
-        </div>
-      </motion.div>
+        <MetricPill label="Hoje" value={todayDisposals.length} />
+        <MetricPill label="Total" value={disposals.length} accentClassName="text-emerald" />
+        <MetricPill label="Streak" value={`${student.streak}d`} accentClassName="text-ruby" />
+      </motion.section>
 
-      {/* Daily Quests */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="rpg-card p-4"
+        transition={{ ...SECTION_TRANSITION, delay: 0.14 }}
       >
-        <h3 className="font-heading text-lg text-gold mb-3 flex items-center gap-2">
-          <span>📋</span> Missoes Diarias
-        </h3>
-        <div className="space-y-3">
-          {dailyQuests.map((quest) => {
-            const completed = quest.current >= quest.target;
-            return (
-              <div key={quest.id} className={`flex items-center gap-3 p-2 rounded-lg ${completed ? 'bg-emerald/10' : 'bg-navy/50'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  completed ? 'bg-emerald text-navy' : 'bg-midnight text-parchment-dark'
-                }`}>
-                  {completed ? '✓' : `${quest.current}/${quest.target}`}
-                </div>
-                <div className="flex-1">
-                  <div className={`text-sm ${completed ? 'text-emerald line-through' : 'text-parchment'}`}>
-                    {quest.description}
-                  </div>
-                </div>
-                <div className="text-xs text-gold font-bold">+{quest.xpReward} XP</div>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Recent Activity */}
-      {disposals.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rpg-card p-4"
-        >
-          <h3 className="font-heading text-lg text-gold mb-3 flex items-center gap-2">
-            <span>📜</span> Atividade Recente
-          </h3>
+        <SectionSheet>
           <div className="space-y-2">
-            {disposals.slice(0, 5).map((d) => (
-              <div key={d.id} className="flex items-center gap-3 text-sm p-2 rounded bg-navy/30">
-                <div className="text-lg">♻️</div>
-                <div className="flex-1">
-                  <span className="text-parchment">{d.itemName}</span>
-                  <span className="text-parchment-dark text-xs ml-2">
-                    {new Date(d.timestamp).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                <span className="text-gold text-xs font-bold">+{d.xpEarned} XP</span>
-              </div>
-            ))}
+            <SectionKicker>Rotina do dia</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">Missoes abertas</h2>
+            <p className="text-sm leading-6 text-parchment/62">
+              Priorize o que rende progresso imediato e mantenha a campanha acesa.
+            </p>
           </div>
-        </motion.div>
-      )}
+
+          <div className="mt-5 space-y-3">
+            {dailyQuests.map((quest) => {
+              const completed = quest.current >= quest.target;
+              const progress = Math.round((quest.current / quest.target) * 100);
+
+              return (
+                <ListRow key={quest.id} className={cn(completed && 'border-emerald/28 bg-emerald/8')}>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        'flex size-11 shrink-0 items-center justify-center rounded-full border text-sm font-semibold',
+                        completed
+                          ? 'border-emerald/30 bg-emerald text-ink'
+                          : 'border-white/10 bg-white/[0.04] text-brass'
+                      )}
+                    >
+                      {completed ? 'OK' : `${quest.current}/${quest.target}`}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <p
+                          className={cn(
+                            'text-[15px] leading-6 text-parchment',
+                            completed && 'text-parchment/62 line-through'
+                          )}
+                        >
+                          {quest.description}
+                        </p>
+                        <span className="text-sm font-semibold text-brass">+{quest.xpReward} XP</span>
+                      </div>
+                      <ProgressBar
+                        value={progress}
+                        className="mt-3 h-1.5"
+                        fillClassName={completed ? 'bg-emerald' : undefined}
+                      />
+                    </div>
+                  </div>
+                </ListRow>
+              );
+            })}
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SECTION_TRANSITION, delay: 0.2 }}
+      >
+        <SectionSheet>
+          <div className="space-y-2">
+            <SectionKicker>Historico</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">Atividade recente</h2>
+            <p className="text-sm leading-6 text-parchment/62">
+              O feed abaixo mostra o que acabou de fortalecer sua trilha.
+            </p>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {disposals.length > 0 ? (
+              disposals.slice(0, 5).map((disposal, index) => (
+                <ListRow key={disposal.id}>
+                  <div className="flex items-start gap-3">
+                    <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-lg">
+                      ♻
+                      {index < disposals.slice(0, 5).length - 1 ? (
+                        <span className="absolute left-1/2 top-full h-5 w-px -translate-x-1/2 bg-white/8" />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[15px] font-medium text-parchment">{disposal.itemName}</p>
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.22em] text-parchment/40">
+                            {new Date(disposal.timestamp).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-brass">+{disposal.xpEarned} XP</span>
+                      </div>
+                    </div>
+                  </div>
+                </ListRow>
+              ))
+            ) : (
+              <ListRow className="border-dashed text-parchment/62">
+                <p className="text-sm leading-6">
+                  Seu historico ainda esta vazio. Abra um novo descarte para iniciar a campanha.
+                </p>
+              </ListRow>
+            )}
+          </div>
+        </SectionSheet>
+      </motion.section>
     </div>
   );
 }

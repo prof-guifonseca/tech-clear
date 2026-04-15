@@ -1,13 +1,30 @@
 'use client';
 
-import { useGame } from '@/store/GameContext';
-import { useAuth } from '@/store/AuthContext';
-import { ACHIEVEMENTS } from '@/data/achievements';
-import { WASTE_CATEGORIES } from '@/data/waste-categories';
-import { getXpForNextLevel, LEVELS } from '@/data/levels';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
+
+import {
+  ListRow,
+  MetricPill,
+  ProgressBar,
+  SectionKicker,
+  SectionSheet,
+} from '@/components/tech-clear/ui';
+import { ACHIEVEMENTS } from '@/data/achievements';
+import { LEVELS, getXpForNextLevel } from '@/data/levels';
+import { WASTE_CATEGORIES } from '@/data/waste-categories';
+import { cn } from '@/lib/cn';
+import { useAuth } from '@/store/AuthContext';
+import { useGame } from '@/store/GameContext';
+
+const RARITY_TONE = {
+  comum: 'border-white/10 bg-white/[0.03] text-parchment/72',
+  raro: 'border-[#6BA8FF]/30 bg-[#6BA8FF]/10 text-[#B7D2FF]',
+  epico: 'border-[#B784FF]/30 bg-[#B784FF]/10 text-[#D8BFFF]',
+  lendario: 'border-brass/35 bg-brass/12 text-brass',
+} as const;
 
 export default function PerfilPage() {
   const { state, dispatch } = useGame();
@@ -16,10 +33,22 @@ export default function PerfilPage() {
   const { student, disposals } = state;
   const xpInfo = getXpForNextLevel(student.totalXp);
 
-  const categoryCounts = WASTE_CATEGORIES.map(cat => ({
-    ...cat,
-    count: disposals.filter(d => d.category === cat.id).length,
+  const categoryCounts = WASTE_CATEGORIES.map((category) => ({
+    ...category,
+    count: disposals.filter((disposal) => disposal.category === category.id).length,
   }));
+
+  const unlockedAchievements = ACHIEVEMENTS.filter((achievement) =>
+    student.achievements.includes(achievement.id)
+  );
+
+  const [selectedAchievementId, setSelectedAchievementId] = useState(
+    unlockedAchievements[0]?.id ?? ACHIEVEMENTS[0].id
+  );
+
+  const selectedAchievement =
+    ACHIEVEMENTS.find((achievement) => achievement.id === selectedAchievementId) ?? ACHIEVEMENTS[0];
+  const selectedUnlocked = student.achievements.includes(selectedAchievement.id);
 
   const handleLogout = () => {
     logout();
@@ -31,157 +60,246 @@ export default function PerfilPage() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Character Sheet */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+    <div className="space-y-4 pb-4">
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rpg-card-gold p-5"
+        transition={{ duration: 0.45, ease: 'easeOut' }}
       >
-        <div className="text-center mb-4">
-          <div className="text-6xl mb-2">{student.avatar}</div>
-          <h2 className="font-heading text-2xl font-bold text-gold">{student.name}</h2>
-          <p className="text-parchment-dark">{student.title}</p>
-          <div className="text-sm text-parchment-dark mt-1">Turma {student.className}</div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="text-center bg-navy/40 rounded-lg p-2">
-            <div className="text-xl font-bold text-gold">⭐ {student.level}</div>
-            <div className="text-[10px] text-parchment-dark">Nivel</div>
-          </div>
-          <div className="text-center bg-navy/40 rounded-lg p-2">
-            <div className="text-xl font-bold text-gold">🪙 {student.totalXp}</div>
-            <div className="text-[10px] text-parchment-dark">XP Total</div>
-          </div>
-          <div className="text-center bg-navy/40 rounded-lg p-2">
-            <div className="text-xl font-bold text-orange-400">🔥 {student.streak}</div>
-            <div className="text-[10px] text-parchment-dark">Streak</div>
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-xs text-parchment-dark mb-1">
-            <span>Progresso para Nv.{Math.min(student.level + 1, 10)}</span>
-            <span>{xpInfo.progress}%</span>
-          </div>
-          <div className="xp-bar-bg h-4">
-            <div className="xp-bar-fill h-full" style={{ width: `${xpInfo.progress}%` }} />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* QR Code */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rpg-card p-4"
-      >
-        <h3 className="font-heading text-lg text-gold mb-3 text-center">📱 Seu QR Code</h3>
-        <div className="flex justify-center bg-white rounded-lg p-4 mx-auto w-fit">
-          <QRCodeSVG value={`techclear:${student.id}`} size={160} />
-        </div>
-        <p className="text-center text-xs text-parchment-dark mt-2">
-          Escaneie na lixeira inteligente para registrar seus descartes
-        </p>
-      </motion.div>
-
-      {/* Stats by Category */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rpg-card p-4"
-      >
-        <h3 className="font-heading text-lg text-gold mb-3">📊 Descartes por Categoria</h3>
-        <div className="grid grid-cols-3 gap-2">
-          {categoryCounts.map(cat => (
-            <div
-              key={cat.id}
-              className="rounded-lg p-2 text-center border-2"
-              style={{ borderColor: cat.color, backgroundColor: `${cat.color}15` }}
-            >
-              <div className="text-xl">{cat.icon}</div>
-              <div className="text-lg font-bold" style={{ color: cat.color }}>{cat.count}</div>
-              <div className="text-[9px] text-parchment-dark">{cat.conamaColor}</div>
+        <SectionSheet tone="hero">
+          <div className="flex items-start gap-4">
+            <div className="flex size-20 shrink-0 items-center justify-center rounded-[28px] border border-brass/25 bg-white/[0.05] text-5xl">
+              {student.avatar}
             </div>
-          ))}
-        </div>
-      </motion.div>
+            <div className="min-w-0 flex-1">
+              <SectionKicker>Ficha da guilda</SectionKicker>
+              <h1 className="mt-2 font-heading text-[2.3rem] leading-none text-parchment">
+                {student.name}
+              </h1>
+              <p className="mt-2 text-base text-parchment/68">{student.title}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-parchment/42">
+                Turma {student.className} • desde{' '}
+                {new Date(student.joinedAt).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+          </div>
 
-      {/* Achievements */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-parchment/52">
+              <span>Progresso para o proximo nivel</span>
+              <span>{xpInfo.progress}%</span>
+            </div>
+            <ProgressBar value={xpInfo.progress} className="h-3" />
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-parchment/44">
+              <span>{xpInfo.current} de {xpInfo.needed} XP</span>
+              <span>Nivel {student.level}</span>
+              <span>Sequencia {student.streak} dias</span>
+            </div>
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="rpg-card p-4"
+        transition={{ duration: 0.45, delay: 0.08, ease: 'easeOut' }}
+        className="flex gap-3 overflow-x-auto pb-1"
       >
-        <h3 className="font-heading text-lg text-gold mb-3">🏅 Conquistas</h3>
-        <div className="grid grid-cols-4 gap-2">
-          {ACHIEVEMENTS.map(achievement => {
-            const unlocked = student.achievements.includes(achievement.id);
-            return (
-              <div
-                key={achievement.id}
-                className={`rounded-lg p-2 text-center border-2 transition-all ${
-                  unlocked
-                    ? `rarity-bg-${achievement.rarity} rarity-${achievement.rarity}`
-                    : 'border-parchment-dark/20 opacity-30 grayscale'
-                }`}
-                title={`${achievement.name}: ${achievement.description}`}
-              >
-                <div className="text-2xl">{achievement.icon}</div>
-                <div className="text-[8px] text-parchment mt-0.5 leading-tight">{achievement.name}</div>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
+        <MetricPill label="Nivel" value={student.level} />
+        <MetricPill label="XP total" value={student.totalXp} accentClassName="text-brass" />
+        <MetricPill label="Streak" value={`${student.streak}d`} accentClassName="text-ruby" />
+      </motion.section>
 
-      {/* Level Progression */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="rpg-card p-4"
+        transition={{ duration: 0.45, delay: 0.14, ease: 'easeOut' }}
       >
-        <h3 className="font-heading text-lg text-gold mb-3">📈 Progressao de Niveis</h3>
-        <div className="space-y-1.5">
-          {LEVELS.map(level => {
-            const reached = student.level >= level.level;
-            const isCurrent = student.level === level.level;
-            return (
-              <div
-                key={level.level}
-                className={`flex items-center gap-2 p-2 rounded text-sm ${
-                  isCurrent ? 'bg-gold/20 border border-gold/40' : reached ? 'bg-emerald/10' : 'opacity-40'
-                }`}
-              >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  reached ? 'bg-emerald text-white' : 'bg-midnight text-parchment-dark'
-                }`}>
-                  {reached ? '✓' : level.level}
-                </span>
-                <span className={`flex-1 ${isCurrent ? 'text-gold font-semibold' : 'text-parchment-dark'}`}>
-                  {level.title}
-                </span>
-                <span className="text-xs text-parchment-dark">{level.xpRequired} XP</span>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
+        <SectionSheet>
+          <div className="space-y-2">
+            <SectionKicker>Acesso rapido</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">Seu QR pessoal</h2>
+          </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button onClick={handleReset} className="rpg-btn flex-1 text-sm py-2">
-          🔄 Resetar Progresso
+          <div className="mt-5 flex flex-col items-center rounded-[28px] border border-white/8 bg-white/[0.03] px-4 py-5">
+            <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
+              <QRCodeSVG value={`techclear:${student.id}`} size={176} />
+            </div>
+            <p className="mt-4 max-w-[20rem] text-center text-sm leading-6 text-parchment/62">
+              Use este codigo na lixeira inteligente para registrar descartes sem perder o ritmo da campanha.
+            </p>
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.18, ease: 'easeOut' }}
+      >
+        <SectionSheet>
+          <div className="space-y-2">
+            <SectionKicker>Mapa de descarte</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">
+              Categorias trabalhadas
+            </h2>
+          </div>
+
+          <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
+            {categoryCounts.map((category) => (
+              <div
+                key={category.id}
+                className="min-w-[118px] rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-3"
+              >
+                <div className="text-2xl">{category.icon}</div>
+                <p className="mt-3 text-2xl font-semibold" style={{ color: category.color }}>
+                  {category.count}
+                </p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-parchment/42">
+                  {category.conamaColor}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.22, ease: 'easeOut' }}
+      >
+        <SectionSheet>
+          <div className="space-y-2">
+            <SectionKicker>Conquistas</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">Colecao da jornada</h2>
+          </div>
+
+          <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
+            {ACHIEVEMENTS.map((achievement) => {
+              const unlocked = student.achievements.includes(achievement.id);
+
+              return (
+                <button
+                  key={achievement.id}
+                  onClick={() => setSelectedAchievementId(achievement.id)}
+                  className={cn(
+                    'min-w-[124px] rounded-[24px] border px-4 py-4 text-left transition-colors',
+                    selectedAchievementId === achievement.id
+                      ? 'border-brass/35 bg-brass/12'
+                      : unlocked
+                        ? 'border-white/10 bg-white/[0.03]'
+                        : 'border-white/6 bg-white/[0.02] opacity-45'
+                  )}
+                >
+                  <div className="text-2xl">{achievement.icon}</div>
+                  <p className="mt-4 text-[13px] font-medium text-parchment">{achievement.name}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-parchment/42">
+                    {unlocked ? 'Liberada' : 'Bloqueada'}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5">
+            <ListRow className={cn(RARITY_TONE[selectedAchievement.rarity])}>
+              <div className="flex items-start gap-3">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-current/20 bg-current/10 text-2xl">
+                  {selectedAchievement.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[15px] font-semibold text-parchment">
+                        {selectedAchievement.name}
+                      </p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-parchment/42">
+                        {selectedUnlocked ? 'Conquista liberada' : 'Ainda em progresso'}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-brass">
+                      +{selectedAchievement.xpReward} XP
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-parchment/68">
+                    {selectedAchievement.description}
+                  </p>
+                </div>
+              </div>
+            </ListRow>
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.26, ease: 'easeOut' }}
+      >
+        <SectionSheet>
+          <div className="space-y-2">
+            <SectionKicker>Escalada</SectionKicker>
+            <h2 className="font-heading text-3xl leading-none text-parchment">Trilha de niveis</h2>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {LEVELS.map((level) => {
+              const reached = student.level >= level.level;
+              const current = student.level === level.level;
+
+              return (
+                <ListRow
+                  key={level.level}
+                  className={cn(
+                    current && 'border-brass/28 bg-brass/8',
+                    reached && !current && 'border-emerald/24 bg-emerald/8'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'flex size-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold',
+                        reached
+                          ? 'border-emerald/30 bg-emerald text-ink'
+                          : 'border-white/10 bg-white/[0.03] text-parchment/52'
+                      )}
+                    >
+                      {reached ? 'OK' : level.level}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-medium text-parchment">{level.title}</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-parchment/40">
+                        {level.xpRequired} XP
+                      </p>
+                    </div>
+                  </div>
+                </ListRow>
+              );
+            })}
+          </div>
+        </SectionSheet>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.3, ease: 'easeOut' }}
+        className="grid grid-cols-2 gap-3"
+      >
+        <button
+          onClick={handleReset}
+          className="min-h-[3.25rem] rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-parchment"
+        >
+          Resetar
         </button>
-        <button onClick={handleLogout} className="rpg-btn flex-1 text-sm py-2 !border-ruby/50">
-          🚪 Sair
+        <button
+          onClick={handleLogout}
+          className="min-h-[3.25rem] rounded-full bg-[linear-gradient(180deg,#E5C176_0%,#D6A84B_100%)] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-ink"
+        >
+          Sair
         </button>
-      </div>
+      </motion.section>
     </div>
   );
 }

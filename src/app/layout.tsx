@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Cinzel, Inter } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import { AuthProvider } from "@/store/AuthContext";
 import "./globals.css";
 
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
-  weight: ["400", "700", "900"],
+  weight: ["500", "600", "700"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${cinzel.variable} ${inter.variable}`}>
+    <html lang="pt-BR" className={`${cormorant.variable} ${manrope.variable}`}>
       <body className="min-h-screen bg-navy text-parchment">
         <AuthProvider>
           {children}
