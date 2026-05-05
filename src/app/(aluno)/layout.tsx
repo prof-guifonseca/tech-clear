@@ -8,11 +8,13 @@ import { getXpForNextLevel } from '@/data/levels';
 import { cn } from '@/lib/cn';
 import { ProgressBar } from '@/components/tech-clear/ui';
 import { useAuth } from '@/store/AuthContext';
+import { CommunityProvider } from '@/store/CommunityContext';
 import { GameProvider, useGame } from '@/store/GameContext';
 
 const NAV_ITEMS = [
   { href: '/inicio', label: 'Inicio' },
   { href: '/descarte', label: 'Descarte' },
+  { href: '/agora', label: 'Ágora' },
   { href: '/taverna', label: 'Taverna' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/perfil', label: 'Perfil' },
@@ -72,14 +74,14 @@ function BottomNav() {
       >
         <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink/84 p-2 backdrop-blur-xl shadow-[0_16px_45px_rgba(0,0,0,0.35)]">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'relative flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors',
+                  'relative flex min-h-11 flex-1 items-center justify-center rounded-full px-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] transition-colors',
                   isActive ? 'bg-white/[0.06] text-parchment' : 'text-parchment/46 hover:text-parchment/78'
                 )}
               >
@@ -125,7 +127,9 @@ export default function AlunoLayout({ children }: { children: React.ReactNode })
 
   return (
     <GameProvider student={student}>
-      <StudentShell>{children}</StudentShell>
+      <CommunityProvider>
+        <StudentShell>{children}</StudentShell>
+      </CommunityProvider>
     </GameProvider>
   );
 }

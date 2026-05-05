@@ -23,6 +23,7 @@ type GameAction =
   | { type: 'UPDATE_QUEST'; questId: string; increment: number }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'SET_STUDENT'; student: Student }
+  | { type: 'ADD_XP'; amount: number }
   | { type: 'RESET' };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -79,6 +80,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         student: action.student,
       };
+    case 'ADD_XP': {
+      if (!action.amount) return state;
+      const newTotalXp = Math.max(0, state.student.totalXp + action.amount);
+      const newLevel = getLevelForXp(newTotalXp);
+      return {
+        ...state,
+        student: {
+          ...state.student,
+          totalXp: newTotalXp,
+          currentXp: newTotalXp,
+          level: newLevel.level,
+          title: newLevel.title,
+        },
+      };
+    }
     case 'RESET':
       return createInitialState(state.student);
     default:
