@@ -13,8 +13,10 @@ import {
   SectionKicker,
   SectionSheet,
 } from '@/components/tech-clear/ui';
+import { HOME_SCHOOL_ID } from '@/data/community-schools';
 import { WASTE_CATEGORIES, WASTE_ITEMS } from '@/data/waste-categories';
 import { cn } from '@/lib/cn';
+import { recordDisposalEvent } from '@/lib/demo-ledger';
 import { calculateXpGain, checkLevelUp, isNewDay } from '@/lib/game-engine';
 import { createId } from '@/lib/id';
 import { classifyWaste, getAnalysisSteps } from '@/lib/waste-classifier';
@@ -69,6 +71,8 @@ export default function DescartePage() {
           const isFirstDisposalToday = isNewDay(state.lastDisposalDate);
           const xp = calculateXpGain(selectedItem, state.student.streak, isFirstDisposalToday);
           setXpGained(xp);
+          const classification = classifyWaste(selectedItem.id);
+          const disposalId = createId('disposal');
 
           const levelCheck = checkLevelUp(state.student.totalXp, state.student.totalXp + xp);
           if (levelCheck.leveled) {
@@ -78,7 +82,7 @@ export default function DescartePage() {
           dispatch({
             type: 'ADD_DISPOSAL',
             disposal: {
-              id: createId('disposal'),
+              id: disposalId,
               studentId: state.student.id,
               itemId: selectedItem.id,
               itemName: selectedItem.name,
@@ -90,6 +94,25 @@ export default function DescartePage() {
             xpGained: xp,
           });
 
+          recordDisposalEvent({
+            id: disposalId,
+            schoolId: HOME_SCHOOL_ID,
+            deviceId: 'tc-maker-001',
+            studentId: state.student.id,
+            studentName: state.student.name,
+            className: state.student.className,
+            itemId: selectedItem.id,
+            itemName: selectedItem.name,
+            category: selectedItem.category,
+            weightGrams: classification.weight,
+            confidence: selectedItem.difficulty === 'dificil' ? 88 : selectedItem.difficulty === 'medio' ? 92 : 96,
+            contaminated: false,
+            correct: true,
+            xpEarned: xp,
+            timestamp: new Date().toISOString(),
+            source: 'app',
+          });
+
           setShowConfetti(true);
           setStep('result');
         }, 350);
@@ -97,7 +120,17 @@ export default function DescartePage() {
     }, 480);
 
     return () => clearInterval(interval);
-  }, [analysisSteps.length, dispatch, selectedItem, state.lastDisposalDate, state.student.streak, state.student.totalXp, state.student.id]);
+  }, [
+    analysisSteps.length,
+    dispatch,
+    selectedItem,
+    state.lastDisposalDate,
+    state.student.className,
+    state.student.id,
+    state.student.name,
+    state.student.streak,
+    state.student.totalXp,
+  ]);
 
   useEffect(() => {
     if (step === 'analyzing' && selectedItem) {
@@ -105,6 +138,10 @@ export default function DescartePage() {
       return cleanup;
     }
   }, [step, selectedItem, runAnalysis]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   const handleReset = () => {
     setStep('scan');
