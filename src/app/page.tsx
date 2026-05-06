@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -88,6 +89,13 @@ export default function LoginPage() {
                   >
                     Painel do professor
                   </button>
+                  <Link
+                    href="/equipamento"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-medium text-parchment/68 transition-colors hover:text-parchment"
+                  >
+                    Conheça o equipamento
+                    <span aria-hidden>→</span>
+                  </Link>
                 </motion.div>
               ) : (
                 <motion.div
