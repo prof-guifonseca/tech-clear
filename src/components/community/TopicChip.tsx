@@ -35,18 +35,29 @@ export function TopicChip({
     ? 'border-brass/45 bg-brass/15 text-parchment'
     : 'border-white/10 bg-white/[0.04] text-parchment/70 hover:text-parchment hover:bg-white/[0.06]';
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={active ? { borderColor: `${color}80`, background: `${color}20`, color: '#f5ead0' } : undefined}
-      className={cn(base, tone, className)}
-    >
+  const content = (
+    <>
       <span>{icon}</span>
       <span>{label}</span>
       {typeof count === 'number' ? (
         <span className="ml-0.5 text-parchment/56">{count}</span>
       ) : null}
+    </>
+  );
+
+  const style = active ? { borderColor: `${color}80`, background: `${color}20`, color: '#f5ead0' } : undefined;
+
+  if (!onClick) {
+    return (
+      <span style={style} className={cn(base, tone, className)}>
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} style={style} className={cn(base, tone, className)}>
+      {content}
     </button>
   );
 }

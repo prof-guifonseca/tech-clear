@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { SchoolBadge } from '@/components/community/SchoolBadge';
+import { Button, EmptyState } from '@/components/tech-clear/ui';
 import { relativeTime } from '@/lib/relative-time';
 import { cn } from '@/lib/cn';
 import type { Comment, ModerationResult } from '@/types/community';
@@ -19,11 +20,7 @@ export function CommentList({ comments, currentStudentId, onUpvote, onReply }: C
   const childrenOf = (id: string) => comments.filter((c) => c.parentCommentId === id);
 
   if (roots.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-center text-sm text-parchment/56">
-        Nenhum comentário ainda. Quebre o gelo.
-      </p>
-    );
+    return <EmptyState>Nenhum comentário ainda. Quebre o gelo.</EmptyState>;
   }
 
   return (
@@ -140,23 +137,24 @@ function CommentRow({
                 </p>
               ) : null}
               <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="secondary"
                   onClick={() => {
                     setReplying(false);
                     setReplyText('');
                     setError(null);
                   }}
-                  className="rounded-full border border-white/10 px-4 py-1.5 text-[12px] text-parchment/64 hover:text-parchment"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="rounded-full bg-brass/85 px-4 py-1.5 text-[12px] font-semibold text-ink hover:bg-brass"
+                  size="sm"
+                  variant="primary"
                 >
                   Responder
-                </button>
+                </Button>
               </div>
             </form>
           ) : null}

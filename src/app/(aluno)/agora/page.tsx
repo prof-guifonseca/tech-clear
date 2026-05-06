@@ -8,7 +8,7 @@ import { PostCard } from '@/components/community/PostCard';
 import { TopicChip } from '@/components/community/TopicChip';
 import { TOPICS } from '@/data/community-topics';
 import { HOME_SCHOOL_ID } from '@/data/community-schools';
-import { PageHeader, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
+import { Button, EmptyState, PageHeader, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
 import { useCommunity } from '@/store/CommunityContext';
 import { useGame } from '@/store/GameContext';
 import type { ModerationResult, TopicId } from '@/types/community';
@@ -74,12 +74,12 @@ export default function AgoraPage() {
             description="Praça das escolas. Compartilhe o que funcionou, peça ajuda no que travou, descubra como outras turmas resolveram. Tudo que importa pra reciclagem cabe aqui."
           />
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <button
+            <Button
               onClick={() => setComposerOpen(true)}
-              className="flex min-h-12 items-center justify-center rounded-full bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] px-5 text-sm font-semibold text-ink shadow-[0_14px_32px_rgba(72,213,151,0.22)] transition-transform active:scale-[0.98]"
+              variant="success"
             >
               + Nova publicação
-            </button>
+            </Button>
             <span className="text-[11px] uppercase tracking-[0.22em] text-parchment/42">
               +{POST_XP} XP por post aprovado
             </span>
@@ -122,9 +122,7 @@ export default function AgoraPage() {
       >
         {visiblePosts.length === 0 ? (
           <SectionSheet tone="soft">
-            <p className="text-sm leading-6 text-parchment/64">
-              Nenhum post nessa categoria ainda. Seja o primeiro.
-            </p>
+            <EmptyState>Nenhum post nessa categoria ainda. Seja o primeiro.</EmptyState>
           </SectionSheet>
         ) : (
           visiblePosts.map((post) => (

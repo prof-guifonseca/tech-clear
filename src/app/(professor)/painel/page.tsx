@@ -1,165 +1,176 @@
 'use client';
 
-import { useMemo } from 'react';
-import { DEMO_STUDENTS } from '@/data/students';
-import { WASTE_CATEGORIES } from '@/data/waste-categories';
-import { generateChartData, generateClassStats } from '@/data/mock-history';
+import { useMemo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar, Legend,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
+
+import { ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
+import { DEMO_STUDENTS } from '@/data/students';
+import { generateChartData, generateClassStats } from '@/data/mock-history';
+import {
+  chartGridColor,
+  chartTextColor,
+  chartTooltipStyle,
+  getCategoryTotals,
+  getDashboardStats,
+} from '@/lib/teacher-analytics';
+
+const CHART_MARGIN = { left: -12, right: 8, top: 8, bottom: 0 };
 
 export default function PainelPage() {
   const chartData = useMemo(() => generateChartData(), []);
   const classStats = useMemo(() => generateClassStats(), []);
-
-  const totalStudents = DEMO_STUDENTS.length;
-  const totalXp = DEMO_STUDENTS.reduce((sum, s) => sum + s.totalXp, 0);
-  const avgLevel = (DEMO_STUDENTS.reduce((sum, s) => sum + s.level, 0) / totalStudents).toFixed(1);
-  const totalItems = chartData.reduce((sum, d) => sum + d.total, 0);
-
-  const pieData = WASTE_CATEGORIES.map(cat => ({
-    name: cat.conamaColor,
-    value: chartData.reduce((sum, d) => sum + (d[cat.id as keyof typeof d] as number || 0), 0),
-    color: cat.color,
-  }));
-
-  const statCards = [
-    { label: 'Total Reciclado', value: totalItems, icon: '♻️', suffix: ' itens' },
-    { label: 'Alunos Ativos', value: totalStudents, icon: '👥', suffix: '' },
-    { label: 'XP Distribuido', value: totalXp.toLocaleString(), icon: '🪙', suffix: '' },
-    { label: 'Nivel Medio', value: avgLevel, icon: '⭐', suffix: '' },
-  ];
+  const categoryTotals = useMemo(() => getCategoryTotals(chartData), [chartData]);
+  const statCards = useMemo(() => getDashboardStats(chartData, DEMO_STUDENTS), [chartData]);
+  const topStudents = useMemo(
+    () => DEMO_STUDENTS.toSorted((a, b) => b.totalXp - a.totalXp).slice(0, 5),
+    [],
+  );
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-gold">📊 Painel Geral</h1>
-        <p className="text-parchment-dark mt-1">Visao geral do programa de reciclagem</p>
-      </div>
+    <div className="space-y-6">
+      <header>
+        <SectionKicker>Visao geral</SectionKicker>
+        <h1 className="mt-2 font-heading text-4xl font-bold leading-none text-brass">Painel Geral</h1>
+        <p className="mt-2 text-sm text-parchment/62">Saude do programa, volume de descartes e turmas em destaque.</p>
+      </header>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {statCards.map((card, i) => (
+      <section className="grid gap-4 md:grid-cols-4">
+        {statCards.map((card, index) => (
           <motion.div
             key={card.label}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="rpg-card p-4"
+            transition={{ delay: index * 0.06, ease: 'easeOut' }}
           >
-            <div className="text-2xl mb-2">{card.icon}</div>
-            <div className="text-2xl font-bold text-gold">{card.value}{card.suffix}</div>
-            <div className="text-sm text-parchment-dark">{card.label}</div>
+            <SectionSheet className="h-full rounded-[24px] px-4 py-4">
+              <div className="text-2xl">{card.icon}</div>
+              <p className="mt-3 text-2xl font-bold text-brass">
+                {card.value}
+                {card.suffix}
+              </p>
+              <p className="mt-1 text-sm text-parchment/58">{card.label}</p>
+            </SectionSheet>
           </motion.div>
         ))}
-      </div>
+      </section>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* Line Chart - Recycling Over Time */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rpg-card p-4"
-        >
-          <h3 className="font-heading text-lg text-gold mb-4">📈 Volume de Reciclagem (30 dias)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f346040" />
-              <XAxis dataKey="date" tick={{ fill: '#d4c4a8', fontSize: 10 }} interval={4} />
-              <YAxis tick={{ fill: '#d4c4a8', fontSize: 10 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#16213e', border: '1px solid #e6b42240', borderRadius: 8, color: '#f0e6d3' }}
-              />
-              <Line type="monotone" dataKey="total" stroke="#e6b422" strokeWidth={2} dot={false} />
+      <section className="grid gap-4 xl:grid-cols-2">
+        <ChartPanel kicker="30 dias" title="Volume de reciclagem" delay={0.16}>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={chartData} margin={CHART_MARGIN}>
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+              <XAxis dataKey="date" tick={{ fill: chartTextColor, fontSize: 10 }} interval={4} />
+              <YAxis tick={{ fill: chartTextColor, fontSize: 10 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Line type="monotone" dataKey="total" stroke="#d6a84b" strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
-        </motion.div>
+        </ChartPanel>
 
-        {/* Pie Chart - Category Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rpg-card p-4"
-        >
-          <h3 className="font-heading text-lg text-gold mb-4">🎨 Distribuicao por Categoria</h3>
-          <ResponsiveContainer width="100%" height={250}>
+        <ChartPanel kicker="Categorias" title="Distribuicao por cor" delay={0.22}>
+          <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={pieData}
+                data={categoryTotals}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={90}
+                innerRadius={54}
+                outerRadius={92}
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
               >
-                {pieData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+                {categoryTotals.map((entry) => (
+                  <Cell key={entry.id} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{ backgroundColor: '#16213e', border: '1px solid #e6b42240', borderRadius: 8, color: '#f0e6d3' }}
-              />
+              <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
-        </motion.div>
-      </div>
+        </ChartPanel>
+      </section>
 
-      {/* Bar Chart - Class Comparison */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="rpg-card p-4 mb-6"
-      >
-        <h3 className="font-heading text-lg text-gold mb-4">🏫 Comparacao entre Turmas</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={classStats}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#0f346040" />
-            <XAxis dataKey="className" tick={{ fill: '#d4c4a8', fontSize: 12 }} />
-            <YAxis tick={{ fill: '#d4c4a8', fontSize: 10 }} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#16213e', border: '1px solid #e6b42240', borderRadius: 8, color: '#f0e6d3' }}
-            />
-            <Legend wrapperStyle={{ color: '#d4c4a8' }} />
-            <Bar dataKey="totalDisposals" name="Descartes" fill="#2ecc71" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="avgXp" name="XP Medio" fill="#e6b422" radius={[4, 4, 0, 0]} />
+      <ChartPanel kicker="Turmas" title="Comparacao entre turmas" delay={0.28}>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={classStats} margin={CHART_MARGIN}>
+            <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+            <XAxis dataKey="className" tick={{ fill: chartTextColor, fontSize: 12 }} />
+            <YAxis tick={{ fill: chartTextColor, fontSize: 10 }} />
+            <Tooltip contentStyle={chartTooltipStyle} />
+            <Legend wrapperStyle={{ color: chartTextColor }} />
+            <Bar dataKey="totalDisposals" name="Descartes" fill="#48d597" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="avgXp" name="XP medio" fill="#d6a84b" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </motion.div>
+      </ChartPanel>
 
-      {/* Top Students */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="rpg-card p-4"
+        transition={{ delay: 0.34, ease: 'easeOut' }}
       >
-        <h3 className="font-heading text-lg text-gold mb-4">🏆 Top Alunos</h3>
-        <div className="space-y-2">
-          {[...DEMO_STUDENTS].sort((a, b) => b.totalXp - a.totalXp).slice(0, 5).map((student, i) => (
-            <div key={student.id} className="flex items-center gap-3 p-2 bg-navy/30 rounded-lg">
-              <span className="text-lg w-6 text-center">
-                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
-              </span>
-              <span className="text-xl">{student.avatar}</span>
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-parchment">{student.name}</span>
-                <span className="text-xs text-parchment-dark ml-2">Turma {student.className}</span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-bold text-gold">{student.totalXp} XP</div>
-                <div className="text-xs text-parchment-dark">Nv.{student.level}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+        <SectionSheet>
+          <SectionKicker>Ranking interno</SectionKicker>
+          <h2 className="mt-2 font-heading text-3xl leading-none text-parchment">Top alunos</h2>
+          <div className="mt-5 space-y-3">
+            {topStudents.map((student, index) => (
+              <ListRow key={student.id}>
+                <div className="flex items-center gap-3">
+                  <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-sm font-semibold text-brass">
+                    {index + 1}
+                  </span>
+                  <span className="text-2xl">{student.avatar}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-parchment">{student.name}</p>
+                    <p className="text-xs text-parchment/45">Turma {student.className} · Nv. {student.level}</p>
+                  </div>
+                  <p className="text-sm font-bold text-brass">{student.totalXp} XP</p>
+                </div>
+              </ListRow>
+            ))}
+          </div>
+        </SectionSheet>
+      </motion.section>
     </div>
+  );
+}
+
+function ChartPanel({
+  kicker,
+  title,
+  delay,
+  children,
+}: {
+  kicker: string;
+  title: string;
+  delay: number;
+  children: ReactNode;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, ease: 'easeOut' }}
+    >
+      <SectionSheet className="h-full">
+        <SectionKicker>{kicker}</SectionKicker>
+        <h2 className="mt-2 font-heading text-2xl leading-none text-parchment">{title}</h2>
+        <div className="mt-4">{children}</div>
+      </SectionSheet>
+    </motion.section>
   );
 }

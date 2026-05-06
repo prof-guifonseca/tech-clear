@@ -19,6 +19,8 @@ import {
   moderatePost,
   recordRateLimit,
 } from '@/lib/community-moderation';
+import { createId } from '@/lib/id';
+import { readJson, writeJson } from '@/lib/storage';
 import type { Comment, ModerationResult, Post, PostAuthor, TopicId } from '@/types/community';
 
 type State = {
@@ -34,7 +36,7 @@ type Action =
   | { type: 'REPORT_POST'; postId: string }
   | { type: 'HYDRATE'; state: State };
 
-const STORAGE_KEY = 'tech-clear-community-v1';
+const STORAGE_KEY = 'tech-clear-community-v2';
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -42,13 +44,8 @@ function reducer(state: State, action: Action): State {
       return action.state;
     case 'CREATE_POST':
       return { ...state, posts: [action.post, ...state.posts] };
-    case 'CREATE_COMMENT': {
-      const { comment } = action;
-      const posts = state.posts.map((p) =>
-        p.id === comment.postId ? { ...p, commentCount: p.commentCount + 1 } : p,
-      );
-      return { ...state, posts, comments: [comment, ...state.comments] };
-    }
+    case 'CREATE_COMMENT':
+      return { ...state, comments: [action.comment, ...state.comments] };
     case 'TOGGLE_POST_UPVOTE': {
       const { postId, studentId } = action;
       const posts = state.posts.map((p) => {
@@ -89,6 +86,31 @@ function initialState(): State {
   return { posts: SEED_POSTS, comments: SEED_COMMENTS };
 }
 
+function restoreState(saved: unknown): State {
+  if (!isRecord(saved)) return initialState();
+
+  return {
+    posts: Array.isArray(saved.posts) ? (saved.posts as Post[]) : SEED_POSTS,
+    comments: Array.isArray(saved.comments) ? (saved.comments as Comment[]) : SEED_COMMENTS,
+  };
+}
+
+function withCommentCounts(posts: Post[], comments: Comment[]): Post[] {
+  const counts = new Map<string, number>();
+  for (const comment of comments) {
+    counts.set(comment.postId, (counts.get(comment.postId) ?? 0) + 1);
+  }
+
+  return posts.map((post) => ({
+    ...post,
+    commentCount: counts.get(post.id) ?? 0,
+  }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 type ContextValue = {
   posts: Post[];
   comments: Comment[];
@@ -119,24 +141,16 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as State;
-        if (parsed.posts && parsed.comments) {
-          dispatch({ type: 'HYDRATE', state: parsed });
-        }
-      }
-    } catch {}
+    dispatch({ type: 'HYDRATE', state: restoreState(readJson<unknown>(STORAGE_KEY, null)) });
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {}
+    writeJson(STORAGE_KEY, state);
   }, [state, hydrated]);
+
+  const posts = useMemo(() => withCommentCounts(state.posts, state.comments), [state.posts, state.comments]);
 
   const createPost = useCallback<ContextValue['createPost']>(
     ({ author, title, body, topicId }) => {
@@ -145,7 +159,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       const mod = moderatePost(title, body);
       if (!mod.ok) return { result: mod };
       const post: Post = {
-        id: 'post-' + Math.random().toString(36).slice(2, 10),
+        id: createId('post'),
         topicId,
         author,
         title: title.trim(),
@@ -170,7 +184,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       const mod = moderateComment(body);
       if (!mod.ok) return { result: mod };
       const comment: Comment = {
-        id: 'c-' + Math.random().toString(36).slice(2, 10),
+        id: createId('c'),
         postId,
         parentCommentId,
         author,
@@ -200,8 +214,8 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getPost = useCallback(
-    (id: string) => state.posts.find((p) => p.id === id),
-    [state.posts],
+    (id: string) => posts.find((p) => p.id === id),
+    [posts],
   );
 
   const getCommentsFor = useCallback(
@@ -211,7 +225,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ContextValue>(
     () => ({
-      posts: state.posts,
+      posts,
       comments: state.comments,
       hydrated,
       createPost,
@@ -222,7 +236,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       getPost,
       getCommentsFor,
     }),
-    [state, hydrated, createPost, createComment, togglePostUpvote, toggleCommentUpvote, reportPost, getPost, getCommentsFor],
+    [posts, state.comments, hydrated, createPost, createComment, togglePostUpvote, toggleCommentUpvote, reportPost, getPost, getCommentsFor],
   );
 
   return <CommunityContext.Provider value={value}>{children}</CommunityContext.Provider>;

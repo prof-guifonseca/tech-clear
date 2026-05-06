@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { CommentList } from '@/components/community/CommentList';
 import { TopicChip } from '@/components/community/TopicChip';
 import { SchoolBadge } from '@/components/community/SchoolBadge';
-import { SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
+import { Button, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
 import { HOME_SCHOOL_ID } from '@/data/community-schools';
 import { relativeTime } from '@/lib/relative-time';
 import { cn } from '@/lib/cn';
@@ -206,13 +206,14 @@ export default function PostDetailPage() {
               <span className="text-[10px] uppercase tracking-[0.22em] text-parchment/40">
                 +{COMMENT_XP} XP por comentário
               </span>
-              <button
+              <Button
                 type="submit"
-                className="rounded-full bg-brass/85 px-5 py-2 text-[13px] font-semibold text-ink hover:bg-brass disabled:opacity-40"
+                variant="primary"
+                size="sm"
                 disabled={topLevel.trim().length < 2}
               >
                 Comentar
-              </button>
+              </Button>
             </div>
           </form>
 

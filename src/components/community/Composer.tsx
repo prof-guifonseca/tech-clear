@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/tech-clear/ui';
 import { TOPICS } from '@/data/community-topics';
 import { cn } from '@/lib/cn';
 import type { ModerationResult, TopicId } from '@/types/community';
@@ -66,13 +67,14 @@ export function Composer({ open, onClose, onSubmit }: ComposerProps) {
       >
         <div className="flex items-center justify-between gap-3">
           <p className="text-[11px] uppercase tracking-[0.34em] text-brass/70">Nova publicação</p>
-          <button
-            type="button"
+          <Button
             onClick={onClose}
-            className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-parchment/56 hover:text-parchment"
+            variant="secondary"
+            size="sm"
+            className="min-h-8 uppercase tracking-[0.22em]"
           >
             Fechar
-          </button>
+          </Button>
         </div>
 
         <div className="mt-4">
@@ -140,12 +142,12 @@ export function Composer({ open, onClose, onSubmit }: ComposerProps) {
           <p className="text-[10px] uppercase tracking-[0.22em] text-parchment/40">
             +5 XP ao publicar
           </p>
-          <button
+          <Button
             type="submit"
-            className="flex min-h-12 items-center justify-center rounded-full bg-[linear-gradient(180deg,#E5C176_0%,#D6A84B_100%)] px-6 text-sm font-semibold text-ink shadow-[0_14px_32px_rgba(214,168,75,0.25)] transition-transform active:scale-[0.98]"
+            variant="primary"
           >
             Publicar
-          </button>
+          </Button>
         </div>
       </form>
     </div>

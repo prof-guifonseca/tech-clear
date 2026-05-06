@@ -1,3 +1,5 @@
+import type { WasteCategory } from './waste';
+
 export interface LevelConfig {
   level: number;
   title: string;
@@ -21,4 +23,5 @@ export interface DailyQuest {
   current: number;
   xpReward: number;
   type: 'descarte' | 'categoria' | 'streak';
+  category?: WasteCategory;
 }
