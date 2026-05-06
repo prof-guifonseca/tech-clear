@@ -2,6 +2,71 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
+const BUTTON_VARIANTS = {
+  primary:
+    'bg-[linear-gradient(180deg,#E5C176_0%,#D6A84B_100%)] text-ink shadow-[0_14px_32px_rgba(214,168,75,0.24)]',
+  success:
+    'bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] text-ink shadow-[0_14px_32px_rgba(72,213,151,0.22)]',
+  secondary: 'border border-white/10 bg-white/[0.04] text-parchment hover:bg-white/[0.06]',
+  ghost: 'text-parchment/58 hover:text-parchment',
+  danger: 'border border-ruby/35 bg-ruby/10 text-ruby hover:bg-ruby/15',
+} as const;
+
+const BUTTON_SIZES = {
+  sm: 'min-h-10 px-4 text-[12px]',
+  md: 'min-h-12 px-5 text-sm',
+  lg: 'min-h-14 px-6 text-base',
+} as const;
+
+type ButtonProps = ComponentPropsWithoutRef<'button'> & {
+  variant?: keyof typeof BUTTON_VARIANTS;
+  size?: keyof typeof BUTTON_SIZES;
+  full?: boolean;
+};
+
+export function Button({
+  className,
+  variant = 'secondary',
+  size = 'md',
+  full = false,
+  type = 'button',
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(
+        'inline-flex items-center justify-center rounded-full font-semibold transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45',
+        BUTTON_VARIANTS[variant],
+        BUTTON_SIZES[size],
+        full && 'w-full',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+type FilterPillProps = ComponentPropsWithoutRef<'button'> & {
+  active?: boolean;
+};
+
+export function FilterPill({ active = false, className, type = 'button', ...props }: FilterPillProps) {
+  return (
+    <button
+      type={type}
+      className={cn(
+        'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.22em] transition-colors whitespace-nowrap',
+        active
+          ? 'border-brass/35 bg-brass text-ink'
+          : 'border-white/8 bg-white/[0.03] text-parchment/58 hover:text-parchment',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 type SectionSheetProps = ComponentPropsWithoutRef<'section'> & {
   tone?: 'default' | 'hero' | 'soft';
 };
@@ -169,6 +234,47 @@ export function SectionKicker({
     <p className={cn('text-[11px] uppercase tracking-[0.34em] text-brass/70', className)}>
       {children}
     </p>
+  );
+}
+
+export function EmptyState({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        'rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-center text-sm leading-6 text-parchment/56',
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
+type ModalShellProps = {
+  children: ReactNode;
+  onClose: () => void;
+  className?: string;
+};
+
+export function ModalShell({ children, onClose, className }: ModalShellProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
+      <button className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Fechar modal" />
+      <div
+        className={cn(
+          'relative z-10 w-full max-w-md rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,32,58,0.98),rgba(8,12,24,0.98))] px-5 py-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)]',
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 

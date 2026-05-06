@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import {
+  Button,
+  FilterPill,
   ListRow,
   PageHeader,
   ProgressBar,
@@ -14,11 +16,18 @@ import {
 import { WASTE_CATEGORIES, WASTE_ITEMS } from '@/data/waste-categories';
 import { cn } from '@/lib/cn';
 import { calculateXpGain, checkLevelUp, isNewDay } from '@/lib/game-engine';
+import { createId } from '@/lib/id';
 import { classifyWaste, getAnalysisSteps } from '@/lib/waste-classifier';
 import { useGame } from '@/store/GameContext';
 import type { WasteCategory, WasteItem } from '@/types/waste';
 
 type Step = 'scan' | 'select' | 'analyzing' | 'result';
+
+const CONFETTI_PIECES = Array.from({ length: 18 }, (_, index) => ({
+  x: `${10 + ((index * 37) % 80)}%`,
+  y: `${20 + ((index * 29) % 65)}%`,
+  rotate: (index * 137) % 540,
+}));
 
 export default function DescartePage() {
   const [step, setStep] = useState<Step>('scan');
@@ -69,7 +78,7 @@ export default function DescartePage() {
           dispatch({
             type: 'ADD_DISPOSAL',
             disposal: {
-              id: Math.random().toString(36).substring(2, 10),
+              id: createId('disposal'),
               studentId: state.student.id,
               itemId: selectedItem.id,
               itemName: selectedItem.name,
@@ -144,12 +153,14 @@ export default function DescartePage() {
                   <div className="text-7xl text-parchment/84">⌁</div>
                 </div>
 
-                <button
+                <Button
                   onClick={handleScan}
-                  className="mt-8 min-h-14 rounded-full bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] px-8 text-sm font-semibold uppercase tracking-[0.22em] text-ink shadow-[0_18px_42px_rgba(72,213,151,0.22)]"
+                  variant="success"
+                  size="lg"
+                  className="mt-8 uppercase tracking-[0.22em]"
                 >
                   Abrir leitura
-                </button>
+                </Button>
 
                 <p className="mt-4 max-w-[20rem] text-sm leading-6 text-parchment/52">
                   Quando o ritual abrir, voce escolhe o item e o sistema confirma a lixeira correta.
@@ -176,30 +187,20 @@ export default function DescartePage() {
               />
 
               <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-                <button
+                <FilterPill
                   onClick={() => setCategoryFilter('all')}
-                  className={cn(
-                    'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.22em] transition-colors',
-                    categoryFilter === 'all'
-                      ? 'border-brass/35 bg-brass text-ink'
-                      : 'border-white/8 bg-white/[0.03] text-parchment/58'
-                  )}
+                  active={categoryFilter === 'all'}
                 >
                   Tudo
-                </button>
+                </FilterPill>
                 {WASTE_CATEGORIES.map((category) => (
-                  <button
+                  <FilterPill
                     key={category.id}
                     onClick={() => setCategoryFilter(category.id)}
-                    className={cn(
-                      'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.22em] transition-colors',
-                      categoryFilter === category.id
-                        ? 'border-brass/35 bg-brass text-ink'
-                        : 'border-white/8 bg-white/[0.03] text-parchment/58'
-                    )}
+                    active={categoryFilter === category.id}
                   >
                     {category.conamaColor}
-                  </button>
+                  </FilterPill>
                 ))}
               </div>
             </SectionSheet>
@@ -313,16 +314,16 @@ export default function DescartePage() {
           >
             {showConfetti ? (
               <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-                {Array.from({ length: 18 }).map((_, index) => (
+                {CONFETTI_PIECES.map((piece, index) => (
                   <motion.div
                     key={index}
                     className="absolute text-xl"
                     initial={{ x: '50%', y: '36%', opacity: 1 }}
                     animate={{
-                      x: `${10 + Math.random() * 80}%`,
-                      y: `${20 + Math.random() * 65}%`,
+                      x: piece.x,
+                      y: piece.y,
                       opacity: 0,
-                      rotate: Math.random() * 540,
+                      rotate: piece.rotate,
                     }}
                     transition={{ duration: 1.7, ease: 'easeOut' }}
                   >
@@ -400,12 +401,13 @@ export default function DescartePage() {
               </ListRow>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <button
+                <Button
                   onClick={handleReset}
-                  className="min-h-[3.25rem] rounded-full bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-ink"
+                  variant="success"
+                  className="min-h-[3.25rem] uppercase tracking-[0.22em]"
                 >
                   Novo descarte
-                </button>
+                </Button>
                 <Link
                   href="/inicio"
                   className="flex min-h-[3.25rem] items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-parchment"

@@ -1,7 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Student } from '@/types/student';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+import { readJson, removeStorageKey, writeJson } from '@/lib/storage';
+import type { Student } from '@/types/student';
 
 type UserRole = 'aluno' | 'professor' | null;
 
@@ -12,50 +14,71 @@ interface AuthState {
   logout: () => void;
 }
 
+const STORAGE_KEY = 'tech-clear-auth-v2';
+const EMPTY_AUTH = { role: null, student: null } satisfies Pick<AuthState, 'role' | 'student'>;
+
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<UserRole>(null);
-  const [student, setStudent] = useState<Student | null>(null);
+  const [auth, setAuth] = useState<Pick<AuthState, 'role' | 'student'>>(EMPTY_AUTH);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('tech-clear-auth');
-      if (saved) {
-        const data = JSON.parse(saved);
-        setRole(data.role);
-        setStudent(data.student);
-      }
-    } catch {}
+    setAuth(restoreAuth(readJson<unknown>(STORAGE_KEY, null)));
     setHydrated(true);
   }, []);
 
-  const login = (newRole: UserRole, newStudent?: Student) => {
-    setRole(newRole);
-    setStudent(newStudent || null);
-    localStorage.setItem('tech-clear-auth', JSON.stringify({ role: newRole, student: newStudent || null }));
-  };
+  const login = useCallback((newRole: UserRole, newStudent?: Student) => {
+    const nextAuth = { role: newRole, student: newRole === 'aluno' ? newStudent ?? null : null };
+    setAuth(nextAuth);
+    writeJson(STORAGE_KEY, nextAuth);
+  }, []);
 
-  const logout = () => {
-    setRole(null);
-    setStudent(null);
-    localStorage.removeItem('tech-clear-auth');
-  };
+  const logout = useCallback(() => {
+    setAuth(EMPTY_AUTH);
+    removeStorageKey(STORAGE_KEY);
+  }, []);
+
+  const value = useMemo<AuthState>(
+    () => ({ ...auth, login, logout }),
+    [auth, login, logout],
+  );
 
   if (!hydrated) {
     return null;
   }
 
-  return (
-    <AuthContext.Provider value={{ role, student, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
+}
+
+function restoreAuth(value: unknown): Pick<AuthState, 'role' | 'student'> {
+  if (!isRecord(value)) return EMPTY_AUTH;
+
+  if (value.role === 'professor') return { role: 'professor', student: null };
+  if (value.role === 'aluno' && isStudent(value.student)) {
+    return { role: 'aluno', student: value.student };
+  }
+
+  return EMPTY_AUTH;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStudent(value: unknown): value is Student {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.avatar === 'string' &&
+    typeof value.className === 'string' &&
+    typeof value.totalXp === 'number'
+  );
 }

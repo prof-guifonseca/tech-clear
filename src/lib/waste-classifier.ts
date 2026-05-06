@@ -1,5 +1,5 @@
 import { WasteItem, WasteCategory } from '@/types/waste';
-import { WASTE_ITEMS, WASTE_CATEGORIES } from '@/data/waste-categories';
+import { WASTE_ITEMS, getCategoryInfo } from '@/data/waste-categories';
 
 export interface ClassificationResult {
   item: WasteItem;
@@ -13,8 +13,8 @@ export interface ClassificationResult {
 }
 
 export function classifyWaste(itemId: string): ClassificationResult {
-  const item = WASTE_ITEMS.find(i => i.id === itemId)!;
-  const category = WASTE_CATEGORIES.find(c => c.id === item.category)!;
+  const item = WASTE_ITEMS.find((wasteItem) => wasteItem.id === itemId) ?? WASTE_ITEMS[0];
+  const category = getCategoryInfo(item.category);
 
   return {
     item,
@@ -22,7 +22,7 @@ export function classifyWaste(itemId: string): ClassificationResult {
     categoryName: category.name,
     conamaColor: category.conamaColor,
     color: category.color,
-    weight: item.weight + Math.floor(Math.random() * 10) - 5,
+    weight: item.weight + stableWeightOffset(item.id),
     funFact: item.funFact,
     tip: category.tip,
   };
@@ -36,4 +36,9 @@ export function getAnalysisSteps(): string[] {
     'Classificando residuo...',
     'Processando resultado...',
   ];
+}
+
+function stableWeightOffset(id: string): number {
+  const hash = Array.from(id).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return (hash % 11) - 5;
 }

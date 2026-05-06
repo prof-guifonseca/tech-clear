@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-import { ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
+import { FilterPill, ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
 import { CLASSES, DEMO_STUDENTS } from '@/data/students';
 import { cn } from '@/lib/cn';
 import { useGame } from '@/store/GameContext';
@@ -71,24 +71,20 @@ export default function RankingPage() {
       >
         <div className="rounded-full border border-white/8 bg-white/[0.03] p-1">
           <div className="grid grid-cols-2 gap-1">
-            <button
+            <FilterPill
               onClick={() => setTab('geral')}
-              className={cn(
-                'min-h-11 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors',
-                tab === 'geral' ? 'bg-brass text-ink' : 'text-parchment/56'
-              )}
+              active={tab === 'geral'}
+              className="border-transparent"
             >
               Geral
-            </button>
-            <button
+            </FilterPill>
+            <FilterPill
               onClick={() => setTab('turma')}
-              className={cn(
-                'min-h-11 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors',
-                tab === 'turma' ? 'bg-brass text-ink' : 'text-parchment/56'
-              )}
+              active={tab === 'turma'}
+              className="border-transparent"
             >
               Por turma
-            </button>
+            </FilterPill>
           </div>
         </div>
       </motion.section>
@@ -101,18 +97,13 @@ export default function RankingPage() {
           className="flex gap-2 overflow-x-auto pb-1"
         >
           {CLASSES.map((className) => (
-            <button
+            <FilterPill
               key={className}
               onClick={() => setSelectedClass(className)}
-              className={cn(
-                'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors',
-                selectedClass === className
-                  ? 'border-brass/35 bg-brass text-ink'
-                  : 'border-white/8 bg-white/[0.03] text-parchment/58'
-              )}
+              active={selectedClass === className}
             >
               Turma {className}
-            </button>
+            </FilterPill>
           ))}
         </motion.section>
       ) : null}

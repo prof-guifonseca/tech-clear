@@ -33,32 +33,23 @@ export function getMaxLevel(): number {
 
 export function isNewDay(lastDate: string | null): boolean {
   if (!lastDate) return true;
-  const last = new Date(lastDate).toDateString();
-  const today = new Date().toDateString();
-  return last !== today;
+  return daysSince(lastDate) !== 0;
 }
 
 export function shouldIncrementStreak(lastDate: string | null): boolean {
   if (!lastDate) return true;
-  const last = new Date(lastDate);
-  const today = new Date();
-  const diffMs = today.getTime() - last.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays === 1;
+  return daysSince(lastDate) === 1;
 }
 
 export function shouldResetStreak(lastDate: string | null): boolean {
   if (!lastDate) return false;
-  const last = new Date(lastDate);
-  const today = new Date();
-  const diffMs = today.getTime() - last.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays > 1;
+  return daysSince(lastDate) > 1;
 }
 
 export function generateDailyQuests() {
-  const categories = ['papel', 'plastico', 'vidro', 'metal', 'organico'];
-  const randomCat = categories[Math.floor(Math.random() * categories.length)];
+  const categories = ['papel', 'plastico', 'vidro', 'metal', 'organico'] as const;
+  const dayIndex = Math.floor(startOfLocalDay(new Date()).getTime() / 86_400_000);
+  const category = categories[dayIndex % categories.length];
   const catNames: Record<string, string> = {
     papel: 'papel', plastico: 'plastico', vidro: 'vidro', metal: 'metal', organico: 'organico',
   };
@@ -66,11 +57,12 @@ export function generateDailyQuests() {
   return [
     {
       id: 'quest-cat',
-      description: `Recicle 3 itens de ${catNames[randomCat]} hoje`,
+      description: `Recicle 3 itens de ${catNames[category]} hoje`,
       target: 3,
       current: 0,
       xpReward: 15,
       type: 'categoria' as const,
+      category,
     },
     {
       id: 'quest-volume',
@@ -89,4 +81,14 @@ export function generateDailyQuests() {
       type: 'streak' as const,
     },
   ];
+}
+
+function startOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function daysSince(iso: string): number {
+  const last = startOfLocalDay(new Date(iso));
+  const today = startOfLocalDay(new Date());
+  return Math.round((today.getTime() - last.getTime()) / 86_400_000);
 }

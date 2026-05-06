@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
+import { Button, FilterPill, ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
 import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/cn';
+import { createId, createRedemptionCode } from '@/lib/id';
 import { useGame } from '@/store/GameContext';
 import type { Reward, RewardCategory } from '@/types/reward';
 
@@ -36,12 +37,12 @@ export default function TavernaPage() {
   const handleRedeem = (reward: Reward) => {
     if (spendableXp < reward.xpCost) return;
 
-    const code = `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const code = createRedemptionCode();
 
     dispatch({
       type: 'REDEEM_REWARD',
       redemption: {
-        id: Math.random().toString(36).substring(2, 10),
+        id: createId('redemption'),
         studentId: state.student.id,
         rewardId: reward.id,
         rewardName: reward.name,
@@ -132,30 +133,20 @@ export default function TavernaPage() {
         transition={{ duration: 0.45, delay: 0.08, ease: 'easeOut' }}
         className="flex gap-2 overflow-x-auto pb-1"
       >
-        <button
+        <FilterPill
           onClick={() => setFilter('all')}
-          className={cn(
-            'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors',
-            filter === 'all'
-              ? 'border-brass/35 bg-brass text-ink'
-              : 'border-white/8 bg-white/[0.03] text-parchment/58'
-          )}
+          active={filter === 'all'}
         >
           Tudo
-        </button>
+        </FilterPill>
         {(Object.entries(CATEGORY_LABELS) as [RewardCategory, string][]).map(([category, label]) => (
-          <button
+          <FilterPill
             key={category}
             onClick={() => setFilter(category)}
-            className={cn(
-              'min-h-11 rounded-full border px-4 text-[11px] font-semibold uppercase tracking-[0.24em] transition-colors',
-              filter === category
-                ? 'border-brass/35 bg-brass text-ink'
-                : 'border-white/8 bg-white/[0.03] text-parchment/58'
-            )}
+            active={filter === category}
           >
             {label}
-          </button>
+          </FilterPill>
         ))}
       </motion.section>
 
@@ -320,24 +311,21 @@ export default function TavernaPage() {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-3">
-                    <button
+                    <Button
                       onClick={() => handleRedeem(selectedReward)}
                       disabled={spendableXp < selectedReward.xpCost}
-                      className={cn(
-                        'min-h-[3.25rem] rounded-full px-4 text-sm font-semibold uppercase tracking-[0.22em] transition-colors',
-                        spendableXp >= selectedReward.xpCost
-                          ? 'bg-[linear-gradient(180deg,#6EE6B0_0%,#48D597_100%)] text-ink'
-                          : 'cursor-not-allowed border border-white/8 bg-white/[0.04] text-parchment/34'
-                      )}
+                      variant={spendableXp >= selectedReward.xpCost ? 'success' : 'secondary'}
+                      className="min-h-[3.25rem] uppercase tracking-[0.22em]"
                     >
                       {spendableXp >= selectedReward.xpCost ? 'Resgatar' : 'XP insuficiente'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => setSelectedReward(null)}
-                      className="min-h-[3.25rem] rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-parchment"
+                      variant="secondary"
+                      className="min-h-[3.25rem] uppercase tracking-[0.22em]"
                     >
                       Voltar
-                    </button>
+                    </Button>
                   </div>
                 </>
               ) : (
@@ -358,12 +346,14 @@ export default function TavernaPage() {
                     </p>
                   </div>
 
-                  <button
+                  <Button
                     onClick={() => setSelectedReward(null)}
-                    className="min-h-[3.25rem] w-full rounded-full bg-[linear-gradient(180deg,#E5C176_0%,#D6A84B_100%)] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-ink"
+                    variant="primary"
+                    full
+                    className="min-h-[3.25rem] uppercase tracking-[0.22em]"
                   >
                     Fechar
-                  </button>
+                  </Button>
                 </div>
               )}
             </motion.div>

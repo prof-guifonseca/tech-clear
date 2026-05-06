@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 
 import {
+  Button,
   ListRow,
   MetricPill,
   ProgressBar,
@@ -287,18 +288,20 @@ export default function PerfilPage() {
         transition={{ duration: 0.45, delay: 0.3, ease: 'easeOut' }}
         className="grid grid-cols-2 gap-3"
       >
-        <button
+        <Button
           onClick={handleReset}
-          className="min-h-[3.25rem] rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-parchment"
+          variant="secondary"
+          className="min-h-[3.25rem] uppercase tracking-[0.22em]"
         >
           Resetar
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleLogout}
-          className="min-h-[3.25rem] rounded-full bg-[linear-gradient(180deg,#E5C176_0%,#D6A84B_100%)] px-4 text-sm font-semibold uppercase tracking-[0.22em] text-ink"
+          variant="primary"
+          className="min-h-[3.25rem] uppercase tracking-[0.22em]"
         >
           Sair
-        </button>
+        </Button>
       </motion.section>
     </div>
   );
