@@ -23,15 +23,21 @@ import {
 } from 'recharts';
 
 import { ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
-import { generateChartData, generateClassStats } from '@/data/mock-history';
 import { DEMO_STUDENTS } from '@/data/students';
 import { WASTE_CATEGORIES } from '@/data/waste-categories';
+import { useDemoLedger } from '@/hooks/use-demo-ledger';
+import {
+  getChartDataFromLedger,
+  getClassInsights,
+  getImpactSnapshot,
+} from '@/lib/demo-ledger';
 import {
   chartGridColor,
   chartTextColor,
   chartTooltipStyle,
   getCategoryTotals,
   getLevelDistribution,
+  getPilotMinutes,
   getRadarData,
   getWeeklyTotals,
 } from '@/lib/teacher-analytics';
@@ -39,8 +45,11 @@ import {
 const CHART_MARGIN = { left: -12, right: 8, top: 8, bottom: 0 };
 
 export default function RelatoriosPage() {
-  const chartData = useMemo(() => generateChartData(), []);
-  const classStats = useMemo(() => generateClassStats(), []);
+  const { events } = useDemoLedger();
+  const chartData = useMemo(() => getChartDataFromLedger(events), [events]);
+  const classStats = useMemo(() => getClassInsights(events, DEMO_STUDENTS), [events]);
+  const snapshot = useMemo(() => getImpactSnapshot(events, DEMO_STUDENTS), [events]);
+  const pilotMinutes = useMemo(() => getPilotMinutes(events, DEMO_STUDENTS), [events]);
   const categoryTotals = useMemo(() => getCategoryTotals(chartData, 'name'), [chartData]);
   const weeklyTotals = useMemo(() => getWeeklyTotals(chartData), [chartData]);
   const radarData = useMemo(() => getRadarData(chartData), [chartData]);
@@ -51,8 +60,32 @@ export default function RelatoriosPage() {
       <header>
         <SectionKicker>Analise detalhada</SectionKicker>
         <h1 className="mt-2 font-heading text-4xl font-bold leading-none text-brass">Relatorios</h1>
-        <p className="mt-2 text-sm text-parchment/62">Leitura de categorias, semanas e maturidade das turmas.</p>
+        <p className="mt-2 text-sm text-parchment/62">Leitura de categorias, semanas, maturidade das turmas e narrativa pronta para coordenacao.</p>
       </header>
+
+      <section className="grid gap-4 xl:grid-cols-[0.75fr_1.25fr]">
+        <SectionSheet>
+          <SectionKicker>Impacto consolidado</SectionKicker>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Metric label="Itens" value={snapshot.totalItems} tone="text-emerald" />
+            <Metric label="Corretos" value={snapshot.correctItems} tone="text-brass" />
+            <Metric label="Kg desviados" value={snapshot.divertedKg.toLocaleString('pt-BR')} />
+            <Metric label="Contaminacao" value={`${snapshot.contaminationRate}%`} tone="text-ruby" />
+          </div>
+        </SectionSheet>
+
+        <SectionSheet>
+          <SectionKicker>Ata automatica</SectionKicker>
+          <h2 className="mt-2 font-heading text-3xl leading-none text-parchment">Resumo para gestao</h2>
+          <div className="mt-4 space-y-2">
+            {pilotMinutes.map((line) => (
+              <ListRow key={line} className="px-3 py-3">
+                <p className="text-sm leading-6 text-parchment/72">{line}</p>
+              </ListRow>
+            ))}
+          </div>
+        </SectionSheet>
+      </section>
 
       <ChartPanel kicker="30 dias" title="Reciclagem por categoria" delay={0}>
         <ResponsiveContainer width="100%" height={320}>

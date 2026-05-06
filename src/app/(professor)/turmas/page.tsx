@@ -5,12 +5,14 @@ import { motion } from 'framer-motion';
 
 import { FilterPill, ListRow, SectionKicker, SectionSheet } from '@/components/tech-clear/ui';
 import { CLASSES, DEMO_STUDENTS } from '@/data/students';
-import { generateClassStats } from '@/data/mock-history';
+import { useDemoLedger } from '@/hooks/use-demo-ledger';
+import { getClassInsights } from '@/lib/demo-ledger';
 import { cn } from '@/lib/cn';
 
 export default function TurmasPage() {
   const [selectedClass, setSelectedClass] = useState(CLASSES[0]);
-  const classStats = useMemo(() => generateClassStats(), []);
+  const { events } = useDemoLedger();
+  const classStats = useMemo(() => getClassInsights(events, DEMO_STUDENTS), [events]);
   const classStudents = useMemo(
     () =>
       DEMO_STUDENTS.filter((student) => student.className === selectedClass).toSorted(
@@ -24,7 +26,7 @@ export default function TurmasPage() {
       <header>
         <SectionKicker>Gestao por turma</SectionKicker>
         <h1 className="mt-2 font-heading text-4xl font-bold leading-none text-brass">Turmas</h1>
-        <p className="mt-2 text-sm text-parchment/62">Compare salas, acompanhe alunos e identifique quem puxa o ritmo.</p>
+        <p className="mt-2 text-sm text-parchment/62">Compare salas, acompanhe alunos e veja recomendacoes derivadas dos eventos da lixeira.</p>
       </header>
 
       <section className="flex gap-2 overflow-x-auto pb-1">
@@ -64,8 +66,9 @@ export default function TurmasPage() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <MiniMetric label="Descartes" value={classStat.totalDisposals} tone="text-emerald" />
-                <MiniMetric label="XP medio" value={classStat.avgXp} tone="text-brass" />
+                <MiniMetric label="Contamin." value={`${classStat.contaminationRate}%`} tone="text-ruby" />
               </div>
+              <p className="mt-3 text-xs leading-5 text-parchment/52">{classStat.recommendation}</p>
             </SectionSheet>
           </motion.button>
         ))}

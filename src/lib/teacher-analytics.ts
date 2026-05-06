@@ -1,5 +1,12 @@
 import { WASTE_CATEGORIES } from '@/data/waste-categories';
-import type { ChartDatum } from '@/data/mock-history';
+import {
+  getCategoryLabel,
+  getImpactSnapshot,
+  type ChartDatum,
+  type ClassInsight,
+  type DisposalEvent,
+  type ImpactSnapshot,
+} from '@/lib/demo-ledger';
 import type { Student } from '@/types/student';
 
 export const chartTextColor = '#c7bdaa';
@@ -20,19 +27,19 @@ export function getCategoryTotals(chartData: ChartDatum[], label: 'name' | 'cona
   }));
 }
 
-export function getDashboardStats(chartData: ChartDatum[], students: Student[]) {
+export function getDashboardStats(
+  chartData: ChartDatum[],
+  students: Student[],
+  snapshot: ImpactSnapshot = getImpactSnapshot([], students),
+) {
   const totalStudents = students.length;
-  const totalXp = students.reduce((sum, student) => sum + student.totalXp, 0);
-  const avgLevel = totalStudents
-    ? (students.reduce((sum, student) => sum + student.level, 0) / totalStudents).toFixed(1)
-    : '0.0';
   const totalItems = chartData.reduce((sum, day) => sum + day.total, 0);
 
   return [
-    { label: 'Total reciclado', value: totalItems, icon: '♻', suffix: ' itens' },
-    { label: 'Alunos ativos', value: totalStudents, icon: '👥', suffix: '' },
-    { label: 'XP distribuido', value: totalXp.toLocaleString('pt-BR'), icon: '✦', suffix: '' },
-    { label: 'Nivel medio', value: avgLevel, icon: '★', suffix: '' },
+    { label: 'Eventos registrados', value: totalItems, icon: '♻', suffix: '' },
+    { label: 'Alunos ativos', value: snapshot.activeStudents, icon: '👥', suffix: `/${totalStudents}` },
+    { label: 'Kg desviados', value: snapshot.divertedKg.toLocaleString('pt-BR'), icon: '↗', suffix: ' kg' },
+    { label: 'CO2e estimado', value: snapshot.co2eKg.toLocaleString('pt-BR'), icon: '↓', suffix: ' kg' },
   ];
 }
 
@@ -65,5 +72,33 @@ export function getLevelDistribution(students: Student[]) {
     { range: 'Nv 5-6', count: students.filter((student) => student.level >= 5 && student.level <= 6).length },
     { range: 'Nv 7-8', count: students.filter((student) => student.level >= 7 && student.level <= 8).length },
     { range: 'Nv 9-10', count: students.filter((student) => student.level >= 9).length },
+  ];
+}
+
+export function getPilotReadiness(snapshot: ImpactSnapshot, classInsights: ClassInsight[]) {
+  const bestClass = classInsights.toSorted((a, b) => b.totalDisposals - a.totalDisposals)[0];
+  const needsAttention = classInsights.toSorted((a, b) => b.contaminationRate - a.contaminationRate)[0];
+
+  return {
+    headline: snapshot.engagementRate >= 80 ? 'Pronto para piloto ampliado' : 'Piloto inicial recomendado',
+    bestClass: bestClass?.className ?? '--',
+    needsAttentionClass: needsAttention?.className ?? '--',
+    secretarySignal:
+      snapshot.contaminationRate <= 10
+        ? 'A escola ja produz evidencia suficiente para um ciclo de 90 dias com metas por turma.'
+        : 'A escola precisa de uma rodada pedagogica curta antes de ampliar a coleta.',
+  };
+}
+
+export function getPilotMinutes(events: DisposalEvent[], students: Student[]) {
+  const snapshot = getImpactSnapshot(events, students);
+  const criticalColor = getCategoryLabel(snapshot.criticalCategory, 'conamaColor').toLowerCase();
+  const mainColor = getCategoryLabel(snapshot.mostWorkedCategory, 'conamaColor').toLowerCase();
+
+  return [
+    `Ata automatica do piloto Tech Clear: ${snapshot.totalItems} eventos de descarte registrados nos ultimos 30 dias, com ${snapshot.activeStudents} alunos ativos.`,
+    `O material mais trabalhado foi ${mainColor}; o ponto critico atual e ${criticalColor}, com contaminacao em ${snapshot.contaminationRate}% dos eventos.`,
+    `Estimativa ambiental: ${snapshot.divertedKg.toLocaleString('pt-BR')} kg desviados do lixo comum e ${snapshot.co2eKg.toLocaleString('pt-BR')} kg CO2e evitados.`,
+    `Encaminhamento sugerido: ${snapshot.recommendation}`,
   ];
 }

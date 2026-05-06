@@ -90,10 +90,16 @@ export default function LoginPage() {
                     Painel do professor
                   </button>
                   <Link
+                    href="/pitch"
+                    className="flex min-h-14 w-full items-center justify-center rounded-full border border-emerald/28 bg-emerald/10 px-6 text-base font-semibold text-emerald transition-colors hover:bg-emerald/15 active:scale-[0.98]"
+                  >
+                    Abrir modo pitch
+                  </Link>
+                  <Link
                     href="/equipamento"
                     className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-medium text-parchment/68 transition-colors hover:text-parchment"
                   >
-                    Conheça o equipamento
+                    Conheça a lixeira maker
                     <span aria-hidden>→</span>
                   </Link>
                 </motion.div>

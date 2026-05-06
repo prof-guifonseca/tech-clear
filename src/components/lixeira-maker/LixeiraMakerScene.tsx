@@ -1427,9 +1427,9 @@ export default function LixeiraMakerScene() {
       </Link>
 
       <div className="lk-header">
-        <h1>Tech-clear — Lixeira Inteligente Maker</h1>
+        <h1>Tech-clear — Prova Maker da Lixeira Inteligente</h1>
         <div className="sub">
-          Tambor 20L reaproveitado · Arduino · 4 compartimentos · feito com material acessível
+          Baixo custo · sensores acessiveis · 4 compartimentos · evento enviado ao app
         </div>
         <div className="total">
           <span className="num" id="lk-hdr-total">R$ 0</span>
@@ -1494,7 +1494,7 @@ export default function LixeiraMakerScene() {
         <h3>Princípio do projeto</h3>
         <div className="lk-legend">
           <div className="item">
-            A lixeira só identifica e roteia. Toda gamificação (pontos, badges, missões) está no app, que recebe os eventos via WiFi.
+            A lixeira identifica, roteia e envia telemetria. A gamificacao e a analise ficam no app e no painel da escola.
           </div>
         </div>
       </div>

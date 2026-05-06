@@ -1,8 +1,8 @@
 import LixeiraMakerScene from '@/components/lixeira-maker/LixeiraMakerScene';
 
 export const metadata = {
-  title: 'Tech Clear — Lixeira Inteligente Maker',
-  description: 'Conheça em 3D o equipamento Tech-clear: tambor reaproveitado, Arduino, 4 compartimentos.',
+  title: 'Tech Clear — Prova Maker da Lixeira Inteligente',
+  description: 'Conheca em 3D a prova de viabilidade Tech Clear: baixo custo, sensores acessiveis e telemetria para o app.',
 };
 
 export default function EquipamentoPage() {

@@ -38,7 +38,7 @@ body {
 
 .font-heading {
   font-family: var(--font-heading), serif;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 a {
